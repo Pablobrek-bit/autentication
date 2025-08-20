@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,4 +5,82 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DB_URL")
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String?  @unique
+  email_verified Boolean  @default(false)
+  password_hash  String?
+  full_name      String?
+  username       String?  @unique
+  is_active      Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  oauthAccounts OAuthAccount[]
+  refreshTokens RefreshToken[]
+  roles         UserRole[]
+  auditLogs     AuditLog[]
+}
+
+model OAuthAccount {
+  id               String    @id @default(uuid())
+  user             User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id          String
+  provider         String
+  provider_user_id String
+  provider_email   String?
+  access_token     String?
+  refresh_token    String?
+  expires_at       DateTime?
+  profile          Json?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  @@unique([provider, provider_user_id])
+}
+
+model RefreshToken {
+  id                   String    @id @default(uuid())
+  user                 User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id              String
+  token_hash           String    @unique
+  expires_at           DateTime
+  created_at           DateTime  @default(now())
+  revoked_at           DateTime?
+  replaced_by_token_id String?
+  ip_address           String?
+  user_agent           String?
+  revoked_reason       String?
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  created_at  DateTime @default(now())
+
+  userRoles UserRole[]
+}
+
+model UserRole {
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id     String
+  role        Role     @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  role_id     String
+  assigned_at DateTime @default(now())
+
+  @@id([user_id, role_id])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  user       User?    @relation(fields: [user_id], references: [id])
+  user_id    String?
+  event_type String
+  ip_address String?
+  user_agent String?
+  meta       Json?
+  created_at DateTime @default(now())
 }

@@ -1,6 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import { config } from 'dotenv';
-import { EnvVarsSchema } from '../application/dto/EnvVarsSchema';
+import { EnvVarsSchema } from '../application/dto/commum/EnvVarsSchema';
 import { validateSync } from 'class-validator';
 
 config();

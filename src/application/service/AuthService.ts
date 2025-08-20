@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserRepository } from '../../domain/port/UserRepository';
 import type { UserRegisterSchema } from '../dto/user/UserRegisterSchema';
-import bcrypt from 'bcryptjs';
+import bcrypt, { hash } from 'bcryptjs';
 import type { UserLoginSchema } from '../dto/user/UserLoginSchema';
 import type { UserLoginResponse } from '../dto/user/UserLoginResponse';
 import { JwtService } from '@nestjs/jwt';
@@ -24,7 +24,7 @@ export class AuthService {
       throw new Error('Email already in use');
     }
 
-    const hashedPassword = await bcrypt.hash(userRegisterSchema.password, 9);
+    const hashedPassword = await hash(userRegisterSchema.password, 9);
 
     await this.repository.create({
       ...userRegisterSchema,

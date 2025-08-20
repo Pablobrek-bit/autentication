@@ -1,13 +1,27 @@
-import { Controller } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from '../../application/service/AuthService';
+import { UserRegisterSchema } from '../../application/dto/user/UserRegisterSchema';
+import { UserLoginSchema } from '../../application/dto/user/UserLoginSchema';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   // POST /auth/register — cria usuário local (email+senha).
+  @Post('register')
+  async register(@Body() userRegisterSchema: UserRegisterSchema) {
+    await this.authService.register(userRegisterSchema);
+    return {
+      message: 'User created successfully',
+    };
+  }
 
   // POST /auth/login — login local (retorna access token + refresh token cookie/valor).
+  @Post('login')
+  async login(@Body() body: UserLoginSchema) {
+    const tokens = await this.authService.login(body);
+    return tokens;
+  }
 
   // POST /auth/refresh — troca refresh token por novo access (+ novo refresh — rotation).
 

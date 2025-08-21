@@ -50,9 +50,10 @@ model RefreshToken {
   created_at           DateTime  @default(now())
   revoked_at           DateTime?
   replaced_by_token_id String?
-  ip_address           String?
-  user_agent           String?
   revoked_reason       String?
+
+  @@index([user_id])
+  @@index([expires_at])
 }
 
 model Role {

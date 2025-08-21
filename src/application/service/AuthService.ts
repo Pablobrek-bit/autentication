@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UserRepository } from '../../domain/port/UserRepository';
 import type { UserRegisterSchema } from '../dto/user/UserRegisterSchema';
 import { compare, hash } from 'bcryptjs';
@@ -48,6 +52,24 @@ export class AuthService {
       email: user.email ?? '',
     });
     const { token: refreshToken } = await this.issueRefreshToken(user.id);
+    return { accessToken, refreshToken };
+  }
+
+  async refresh(refreshToken: string): Promise<UserLoginResponse> {
+    if (!refreshToken)
+      throw new BadRequestException('Refresh token is required');
+
+    const hash = this.hashToken(refreshToken);
+    const token = await this.repository.findRefreshTokenByHash(hash);
+    if (!token || token.revoked_at)
+      throw new UnauthorizedException('Invalid or revoked refresh token');
+    if (token.expires_at.getTime() <= Date.now())
+      throw new UnauthorizedException('Refresh token expired');
+
+    const accessToken = await this.signAccessToken({
+      sub: token.user_id,
+      email: '',
+    });
     return { accessToken, refreshToken };
   }
 

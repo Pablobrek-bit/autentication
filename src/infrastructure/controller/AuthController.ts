@@ -1,7 +1,8 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from '../../application/service/AuthService';
 import { UserRegisterSchema } from '../../application/dto/user/UserRegisterSchema';
 import { UserLoginSchema } from '../../application/dto/user/UserLoginSchema';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -24,6 +25,11 @@ export class AuthController {
   }
 
   // POST /auth/refresh — troca refresh token por novo access (+ novo refresh — rotation).
+  @Post('refresh')
+  async refresh(@Body('refreshToken') refreshToken: string) {
+    const tokens = await this.authService.refresh(refreshToken);
+    return tokens;
+  }
 
   // POST /auth/logout — revoga refresh token (logout).
 
@@ -36,6 +42,11 @@ export class AuthController {
   // User (protegidas)
 
   // GET /users/me — retorna dados do usuário autenticado (protected by JWT).
+  @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+  async getProfile(@Req() req) {
+    return req.user;
+  }
 
   // GET /users/:id / outros endpoints de usuário conforme necessidade (RBAC/guards).
 }

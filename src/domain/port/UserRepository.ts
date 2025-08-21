@@ -9,8 +9,6 @@ export abstract class UserRepository {
     userId: string;
     tokenHash: string;
     expiresAt: Date;
-    ipAddress?: string;
-    userAgent?: string;
   }): Promise<{ id: string }>;
   abstract findRefreshTokenByHash(tokenHash: string): Promise<{
     id: string;

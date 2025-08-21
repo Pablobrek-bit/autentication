@@ -43,8 +43,6 @@ export class PrismaUserRepository implements UserRepository {
         user_id: params.userId,
         token_hash: params.tokenHash,
         expires_at: params.expiresAt,
-        ip_address: params.ipAddress,
-        user_agent: params.userAgent,
       },
       select: { id: true },
     });

@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserRepository } from '../../domain/port/UserRepository';
 import type { UserRegisterSchema } from '../dto/user/UserRegisterSchema';
-import bcrypt, { hash } from 'bcryptjs';
+import { compare, hash } from 'bcryptjs';
 import type { UserLoginSchema } from '../dto/user/UserLoginSchema';
 import type { UserLoginResponse } from '../dto/user/UserLoginResponse';
 import { JwtService } from '@nestjs/jwt';
@@ -39,7 +39,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const ok = await bcrypt.compare(credentials.password, user.password_hash);
+    const ok = await compare(credentials.password, user.password_hash);
     if (!ok) {
       throw new UnauthorizedException('Invalid credentials');
     }

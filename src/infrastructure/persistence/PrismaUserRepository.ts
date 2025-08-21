@@ -35,7 +35,7 @@ export class PrismaUserRepository implements UserRepository {
     userId: string;
     tokenHash: string;
     expiresAt: Date;
-    isAddress?: string;
+    ipAddress?: string;
     userAgent?: string;
   }): Promise<{ id: string }> {
     const created = await this.prisma.refreshToken.create({
@@ -43,11 +43,40 @@ export class PrismaUserRepository implements UserRepository {
         user_id: params.userId,
         token_hash: params.tokenHash,
         expires_at: params.expiresAt,
-        ip_address: params.isAddress,
+        ip_address: params.ipAddress,
         user_agent: params.userAgent,
       },
       select: { id: true },
     });
     return created;
+  }
+
+  async findRefreshTokenByHash(tokenHash: string) {
+    return this.prisma.refreshToken.findFirst({
+      where: { token_hash: tokenHash },
+      select: {
+        id: true,
+        user_id: true,
+        token_hash: true,
+        expires_at: true,
+        revoked_at: true,
+        replaced_by_token_id: true,
+      },
+    });
+  }
+
+  async revokeRefreshToken(params: {
+    tokenId: string;
+    reason?: string;
+    replacedByTokenId?: string | null;
+  }) {
+    await this.prisma.refreshToken.update({
+      where: { id: params.tokenId },
+      data: {
+        revoked_at: new Date(),
+        revoked_reason: params.reason,
+        replaced_by_token_id: params.replacedByTokenId,
+      },
+    });
   }
 }

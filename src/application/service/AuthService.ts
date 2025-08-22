@@ -71,6 +71,21 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
+  async logout(refreshToken: string): Promise<void> {
+    if (!refreshToken)
+      throw new BadRequestException('Refresh token is required');
+
+    const hash = this.hashToken(refreshToken);
+    const token = await this.repository.findRefreshTokenByHash(hash);
+    if (!token || token.revoked_at)
+      throw new UnauthorizedException('Invalid or revoked refresh token');
+
+    await this.repository.revokeRefreshToken({
+      tokenId: token.id,
+      reason: 'logout',
+    });
+  }
+
   private async signAccessToken(payload: { sub: string }): Promise<string> {
     return this.jwtService.signAsync(payload, {
       secret: env.JWT_ACCESS_SECRET,

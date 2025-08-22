@@ -32,6 +32,11 @@ export class AuthController {
   }
 
   // POST /auth/logout — revoga refresh token (logout).
+  @Post('logout')
+  async logout(@Body('refreshToken') refreshToken: string) {
+    await this.authService.logout(refreshToken);
+    return { message: 'Logged out' };
+  }
 
   // GET /auth/oauth/:provider — inicia fluxo OAuth (redirect).
 

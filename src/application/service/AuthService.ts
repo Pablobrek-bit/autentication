@@ -77,8 +77,7 @@ export class AuthService {
 
     const hash = this.hashToken(refreshToken);
     const token = await this.repository.findRefreshTokenByHash(hash);
-    if (!token || token.revoked_at)
-      throw new UnauthorizedException('Invalid or revoked refresh token');
+    if (!token || token.revoked_at) return;
 
     await this.repository.revokeRefreshToken({
       tokenId: token.id,

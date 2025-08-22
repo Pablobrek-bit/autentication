@@ -49,7 +49,6 @@ export class AuthService {
     }
     const accessToken = await this.signAccessToken({
       sub: user.id,
-      email: user.email ?? '',
     });
     const { token: refreshToken } = await this.issueRefreshToken(user.id);
     return { accessToken, refreshToken };
@@ -68,15 +67,11 @@ export class AuthService {
 
     const accessToken = await this.signAccessToken({
       sub: token.user_id,
-      email: '',
     });
     return { accessToken, refreshToken };
   }
 
-  private async signAccessToken(payload: {
-    sub: string;
-    email: string;
-  }): Promise<string> {
+  private async signAccessToken(payload: { sub: string }): Promise<string> {
     return this.jwtService.signAsync(payload, {
       secret: env.JWT_ACCESS_SECRET,
       expiresIn: env.JWT_ACCESS_TTL,

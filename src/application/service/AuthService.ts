@@ -25,7 +25,7 @@ export class AuthService {
     );
 
     if (existing) {
-      throw new Error('Email already in use');
+      throw new BadRequestException('Email already in use');
     }
 
     const hashedPassword = await hash(userRegisterSchema.password, 9);

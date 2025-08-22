@@ -1,5 +1,5 @@
 import { Expose, Type } from 'class-transformer';
-import { IsEnum, IsInt, IsString } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
 
 enum AppEnv {
   DEV = 'dev',
@@ -34,4 +34,19 @@ export class EnvVarsSchema {
   @Type(() => Number)
   @IsInt()
   JWT_REFRESH_TTL: number = 2592000;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  OAUTH_GOOGLE_CLIENT_ID?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  OAUTH_GOOGLE_CLIENT_SECRET?: string;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  OAUTH_GOOGLE_CALLBACK_URL?: string;
 }

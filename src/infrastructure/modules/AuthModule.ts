@@ -7,11 +7,11 @@ import { env } from '../../shared/env';
 import { UserRepository } from '../../domain/port/UserRepository';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from '../config/security/JwtStrategy';
+import { GoogleStrategy } from '../config/security/GoogleStrategy';
 
 @Module({
   imports: [
     PassportModule,
-    // PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: env.JWT_ACCESS_SECRET,
       signOptions: { expiresIn: env.JWT_ACCESS_TTL },
@@ -20,6 +20,7 @@ import { JwtStrategy } from '../config/security/JwtStrategy';
   controllers: [AuthController],
   providers: [
     JwtStrategy,
+    GoogleStrategy,
     AuthService,
     {
       provide: UserRepository,

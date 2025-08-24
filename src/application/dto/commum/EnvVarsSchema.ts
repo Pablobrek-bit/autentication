@@ -1,5 +1,5 @@
 import { Expose, Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsInt, IsString } from 'class-validator';
 
 enum AppEnv {
   DEV = 'dev',
@@ -37,16 +37,13 @@ export class EnvVarsSchema {
 
   @Expose()
   @IsString()
-  @IsOptional()
-  OAUTH_GOOGLE_CLIENT_ID?: string;
+  OAUTH_GOOGLE_CLIENT_ID: string;
 
   @Expose()
   @IsString()
-  @IsOptional()
-  OAUTH_GOOGLE_CLIENT_SECRET?: string;
+  OAUTH_GOOGLE_CLIENT_SECRET: string;
 
   @Expose()
   @IsString()
-  @IsOptional()
-  OAUTH_GOOGLE_CALLBACK_URL?: string;
+  OAUTH_GOOGLE_CALLBACK_URL: string;
 }

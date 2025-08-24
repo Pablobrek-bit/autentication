@@ -77,4 +77,64 @@ export class PrismaUserRepository implements UserRepository {
       },
     });
   }
+
+  async findUserByOAuth(provider: string, providerUserId: string) {
+    const account = await this.prisma.oAuthAccount.findFirst({
+      where: {
+        provider,
+        provider_user_id: providerUserId,
+      },
+      select: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+    });
+    if (!account) return null;
+    return { id: account.user.id, email: account.user.email };
+  }
+
+  async createUserFromOAuth(params: {
+    email: string | null;
+    fullName: string | null;
+    emailVerified?: boolean;
+  }) {
+    const created = await this.prisma.user.create({
+      data: {
+        email: params.email,
+        full_name: params.fullName ?? undefined,
+        email_verified: params.emailVerified ?? true,
+      },
+      select: {
+        id: true,
+        email: true,
+      },
+    });
+    return created;
+  }
+
+  async linkOAuthAccount(
+    userId: string,
+    account: {
+      provider: string;
+      providerUserId: string;
+      providerEmail?: string;
+      accessToken?: string;
+      refreshToken?: string;
+    },
+  ) {
+    await this.prisma.oAuthAccount.create({
+      data: {
+        user_id: userId,
+        provider: account.provider,
+        provider_user_id: account.providerUserId,
+        provider_email: account.providerEmail,
+        access_token: account.accessToken,
+        refresh_token: account.refreshToken,
+      },
+    });
+  }
 }

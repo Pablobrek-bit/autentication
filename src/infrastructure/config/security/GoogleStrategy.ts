@@ -25,5 +25,16 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     const providerUserId = profile.id;
     const email = profile.emails?.[0].value ?? null;
     const fullName = profile.displayName ?? null;
+
+    const user = await this.authService.upsertOAuthUser({
+      provider,
+      providerUserId,
+      email,
+      fullName,
+      accessToken,
+      refreshToken,
+    });
+
+    return { userId: user.id, email: user.email ?? undefined };
   }
 }

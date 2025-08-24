@@ -85,6 +85,61 @@ export class AuthService {
     });
   }
 
+  // Emite tokens após o OAuth callback
+  async oauthLogin(userId: string): Promise<UserLoginResponse> {
+    const accessToken = await this.signAccessToken({ sub: userId });
+    const { token: refreshToken } = await this.issueRefreshToken(userId);
+    return { accessToken, refreshToken };
+  }
+
+  async upsertOAuthUser(params: {
+    provider: string;
+    providerUserId: string;
+    email: string | null;
+    fullName: string | null;
+    accessToken?: string;
+    refreshToken?: string;
+  }): Promise<{ id: string; email: string | null }> {
+    // 1) Já existe conta OAuth?
+    const existingByOAuth = await this.repository.findUserByOAuth(
+      params.provider,
+      params.providerUserId,
+    );
+    if (existingByOAuth) return existingByOAuth;
+
+    // 2) Existe usuário por email? (se houver email)
+    // nesse caso vai ser verificado se o email já está em uso, no caso se o usuario já fez login usando apenas
+    // email e senha, se tiver acontecido isso ele vai vincular a conta OAuth ao usuário existente
+    if (params.email) {
+      const userByEmail = await this.repository.findByEmail(params.email);
+      if (userByEmail) {
+        await this.repository.linkOAuthAccount(userByEmail.id, {
+          provider: params.provider,
+          providerUserId: params.providerUserId,
+          providerEmail: params.email,
+          accessToken: params.accessToken,
+          refreshToken: params.refreshToken,
+        });
+        return { id: userByEmail.id, email: userByEmail.email ?? null };
+      }
+    }
+
+    // 3) Cria um novo usuário e vincular OAuth
+    const createdUser = await this.repository.createUserFromOAuth({
+      email: params.email,
+      fullName: params.fullName,
+      emailVerified: true,
+    });
+    await this.repository.linkOAuthAccount(createdUser.id, {
+      provider: params.provider,
+      providerUserId: params.providerUserId,
+      providerEmail: params.email ?? undefined,
+      accessToken: params.accessToken,
+      refreshToken: params.refreshToken,
+    });
+    return { id: createdUser.id, email: createdUser.email };
+  }
+
   private async signAccessToken(payload: { sub: string }): Promise<string> {
     return this.jwtService.signAsync(payload, {
       secret: env.JWT_ACCESS_SECRET,

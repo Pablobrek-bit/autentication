@@ -49,7 +49,8 @@ export class AuthController {
   @Get('oauth/google/callback')
   @UseGuards(AuthGuard('google'))
   async googleAuthCallback(@Req() req) {
-    console.log(req.user);
+    const tokens = await this.authService.oauthLogin(req.user.userId);
+    return tokens;
   }
 
   // User (protegidas)

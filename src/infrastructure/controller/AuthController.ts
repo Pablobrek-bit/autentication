@@ -38,11 +38,19 @@ export class AuthController {
     return { message: 'Logged out' };
   }
 
-  // GET /auth/oauth/:provider — inicia fluxo OAuth (redirect).
+  // GET /auth/oauth/google — inicia fluxo OAuth (redirect para Google)
+  @Get('oauth/google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {
+    // O guard faz o redirect para o Google automaticamente
+  }
 
-  // GET /auth/oauth/:provider/callback — callback do provedor (cria/associa user e emite tokens).
-
-  // POST /auth/link/:provider — (opcional) linkar conta social para usuário logado (pode usar redirect OAuth).
+  // GET /auth/oauth/google/callback — retorno do Google
+  @Get('oauth/google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthCallback(@Req() req) {
+    console.log(req.user);
+  }
 
   // User (protegidas)
 

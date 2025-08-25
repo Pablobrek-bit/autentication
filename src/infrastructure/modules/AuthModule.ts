@@ -8,10 +8,14 @@ import { UserRepository } from '../../domain/port/UserRepository';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from '../config/security/JwtStrategy';
 import { GoogleStrategy } from '../config/security/GoogleStrategy';
+import { OAuthAccountModule } from './OAuthAccountModule';
+import { RefreshTokenModule } from './RefreshTokenModule';
 
 @Module({
   imports: [
     PassportModule,
+    OAuthAccountModule,
+    RefreshTokenModule,
     JwtModule.register({
       secret: env.JWT_ACCESS_SECRET,
       signOptions: { expiresIn: env.JWT_ACCESS_TTL },

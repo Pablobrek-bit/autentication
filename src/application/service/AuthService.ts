@@ -11,12 +11,14 @@ import type { UserLoginResponse } from '../dto/user/UserLoginResponse';
 import { JwtService } from '@nestjs/jwt';
 import { env } from '../../shared/env';
 import { RefreshTokenService } from './RefreshTokenService';
+import { OAuthAccountService } from './OAuthAccountService';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly repository: UserRepository,
     private readonly refreshTokenService: RefreshTokenService,
+    private readonly oAuthAccountService: OAuthAccountService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -101,7 +103,7 @@ export class AuthService {
     refreshToken?: string;
   }): Promise<{ id: string; email: string | null }> {
     // 1) Já existe conta OAuth?
-    const existingByOAuth = await this.repository.findUserByOAuth(
+    const existingByOAuth = await this.oAuthAccountService.findUserByOAuth(
       params.provider,
       params.providerUserId,
     );
@@ -113,13 +115,14 @@ export class AuthService {
     if (params.email) {
       const userByEmail = await this.repository.findByEmail(params.email);
       if (userByEmail) {
-        await this.repository.linkOAuthAccount(userByEmail.id, {
-          provider: params.provider,
-          providerUserId: params.providerUserId,
-          providerEmail: params.email,
-          accessToken: params.accessToken,
-          refreshToken: params.refreshToken,
-        });
+        await this.oAuthAccountService.linkWithOAuth(
+          userByEmail.id,
+          params.provider,
+          params.providerUserId,
+          params.email,
+          params.accessToken,
+          params.refreshToken,
+        );
         return { id: userByEmail.id, email: userByEmail.email ?? null };
       }
     }

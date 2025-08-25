@@ -36,6 +36,9 @@ export class RefreshTokenService {
   }
 
   // implement revoke method
+  async revokeRefreshToken(tokenId: string): Promise<void> {
+    await this.repository.revokeRefreshToken({ tokenId, reason: 'logout' });
+  }
 
   public hashToken(token: string): string {
     return createHash('sha256').update(token).digest('hex');

@@ -81,10 +81,7 @@ export class AuthService {
     const token = await this.refreshTokenService.findRefreshTokenByHash(hash);
     if (!token || token.revoked_at) return;
 
-    await this.repository.revokeRefreshToken({
-      tokenId: token.id,
-      reason: 'logout',
-    });
+    await this.refreshTokenService.revokeRefreshToken(token.id);
   }
 
   // Emite tokens após o OAuth callback

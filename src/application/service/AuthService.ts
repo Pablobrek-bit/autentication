@@ -10,12 +10,13 @@ import type { UserLoginSchema } from '../dto/user/UserLoginSchema';
 import type { UserLoginResponse } from '../dto/user/UserLoginResponse';
 import { JwtService } from '@nestjs/jwt';
 import { env } from '../../shared/env';
-import { createHash, randomBytes } from 'crypto';
+import { RefreshTokenService } from './RefreshTokenService';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly repository: UserRepository,
+    private readonly refreshTokenService: RefreshTokenService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -50,7 +51,8 @@ export class AuthService {
     const accessToken = await this.signAccessToken({
       sub: user.id,
     });
-    const { token: refreshToken } = await this.issueRefreshToken(user.id);
+    const { token: refreshToken } =
+      await this.refreshTokenService.issueRefreshToken(user.id);
     return { accessToken, refreshToken };
   }
 
@@ -58,7 +60,7 @@ export class AuthService {
     if (!refreshToken)
       throw new BadRequestException('Refresh token is required');
 
-    const hash = this.hashToken(refreshToken);
+    const hash = this.refreshTokenService.hashToken(refreshToken);
     const token = await this.repository.findRefreshTokenByHash(hash);
     if (!token || token.revoked_at)
       throw new UnauthorizedException('Invalid or revoked refresh token');
@@ -75,7 +77,7 @@ export class AuthService {
     if (!refreshToken)
       throw new BadRequestException('Refresh token is required');
 
-    const hash = this.hashToken(refreshToken);
+    const hash = this.refreshTokenService.hashToken(refreshToken);
     const token = await this.repository.findRefreshTokenByHash(hash);
     if (!token || token.revoked_at) return;
 
@@ -88,7 +90,8 @@ export class AuthService {
   // Emite tokens após o OAuth callback
   async oauthLogin(userId: string): Promise<UserLoginResponse> {
     const accessToken = await this.signAccessToken({ sub: userId });
-    const { token: refreshToken } = await this.issueRefreshToken(userId);
+    const { token: refreshToken } =
+      await this.refreshTokenService.issueRefreshToken(userId);
     return { accessToken, refreshToken };
   }
 
@@ -145,23 +148,5 @@ export class AuthService {
       secret: env.JWT_ACCESS_SECRET,
       expiresIn: env.JWT_ACCESS_TTL,
     });
-  }
-
-  private async issueRefreshToken(
-    userId: string,
-  ): Promise<{ id: string; token: string }> {
-    const token = randomBytes(64).toString('hex');
-    const tokenHash = this.hashToken(token);
-    const expiresAt = new Date(Date.now() + env.JWT_REFRESH_TTL * 1000);
-    const created = await this.repository.createRefreshToken({
-      userId,
-      tokenHash,
-      expiresAt,
-    });
-    return { id: created.id, token };
-  }
-
-  private hashToken(token: string): string {
-    return createHash('sha256').update(token).digest('hex');
   }
 }

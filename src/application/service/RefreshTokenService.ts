@@ -22,7 +22,19 @@ export class RefreshTokenService {
 
     return { id: created.id, token };
   }
+
   // implement find by hash method
+  async findRefreshTokenByHash(hash: string): Promise<{
+    id: string;
+    user_id: string;
+    token_hash: string;
+    expires_at: Date;
+    revoked_at: Date | null;
+    replaced_by_token_id: string | null;
+  } | null> {
+    return this.repository.findRefreshTokenByHash(hash);
+  }
+
   // implement revoke method
 
   public hashToken(token: string): string {

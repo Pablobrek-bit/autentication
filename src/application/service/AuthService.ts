@@ -61,7 +61,7 @@ export class AuthService {
       throw new BadRequestException('Refresh token is required');
 
     const hash = this.refreshTokenService.hashToken(refreshToken);
-    const token = await this.repository.findRefreshTokenByHash(hash);
+    const token = await this.refreshTokenService.findRefreshTokenByHash(hash);
     if (!token || token.revoked_at)
       throw new UnauthorizedException('Invalid or revoked refresh token');
     if (token.expires_at.getTime() <= Date.now())
@@ -78,7 +78,7 @@ export class AuthService {
       throw new BadRequestException('Refresh token is required');
 
     const hash = this.refreshTokenService.hashToken(refreshToken);
-    const token = await this.repository.findRefreshTokenByHash(hash);
+    const token = await this.refreshTokenService.findRefreshTokenByHash(hash);
     if (!token || token.revoked_at) return;
 
     await this.repository.revokeRefreshToken({

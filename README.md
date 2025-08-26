@@ -1,98 +1,276 @@
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" />
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# Authentication API 🚀
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+[![NestJS](https://img.shields.io/badge/NestJS-11.x-red)](https://nestjs.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-6.x-blue)](https://www.prisma.io/)
+[![Passport](https://img.shields.io/badge/Passport-JWT%20%7C%20Google%20OAuth2-brightgreen)](http://www.passportjs.org/)
+[![License](https://img.shields.io/badge/License-UNLICENSED-lightgrey)](LICENSE)
 
-## Description
+API REST de autenticação com NestJS, JWT (access + refresh), OAuth2 (Google) e limpeza automática de refresh tokens. Inclui Guards JWT, validação com DTOs e repositórios Prisma.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## 📋 Tabela de Conteúdos
 
-```bash
-$ npm install
+- [Funcionalidades](#-funcionalidades)
+- [Endpoints da API](#-endpoints-da-api)
+- [Tecnologias Utilizadas](#-tecnologias-utilizadas)
+- [Estrutura do Projeto](#-estrutura-do-projeto)
+- [Instalação](#-instalação)
+- [Comandos Disponíveis](#-comandos-disponíveis)
+- [Variáveis de Ambiente](#-variáveis-de-ambiente)
+- [Deployment](#-deployment)
+- [Troubleshooting](#-troubleshooting)
+- [Contribuição](#-contribuição)
+
+---
+
+## 🌟 Funcionalidades
+
+### Funcionalidades Principais
+
+- Autenticação local: email + senha → access token (JWT) e refresh token persistido (hash SHA-256).
+- Logout: revogação de refresh token (idempotente).
+- OAuth2 Google: social login com criação/vinculação de conta.
+- Rotas protegidas por JWT Guard (Bearer token).
+
+### Recursos Adicionais
+
+- Limpeza automática de tokens expirados/revogados (cron job horário com @nestjs/schedule).
+- Validação de DTOs (class-validator) e pipes globais.
+- Repositórios Prisma (User, RefreshToken, OAuthAccount) e índices úteis.
+
+---
+
+## 🔌 Endpoints da API
+
+### Auth
+
+- POST `/auth/register` — cria usuário (email/senha).
+- POST `/auth/login` — gera accessToken + refreshToken.
+- POST `/auth/refresh` — emite novo accessToken (mantém o mesmo refresh). Body: `{ "refreshToken": "..." }`.
+- POST `/auth/logout` — revoga o refreshToken informado. Body: `{ "refreshToken": "..." }`.
+- GET `/auth/oauth/google` — inicia OAuth (redirect para Google).
+- GET `/auth/oauth/google/callback` — callback do Google, retorna tokens.
+- GET `/auth/me` — rota protegida, retorna `req.user` do JWT.
+
+Para detalhes, consulte `src/infrastructure/controller/AuthController.ts`.
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+| Categoria        | Tecnologias                                                            |
+| ---------------- | ---------------------------------------------------------------------- |
+| Backend          | NestJS 11.x, TypeScript 5.x                                            |
+| Auth             | @nestjs/jwt, passport, passport-jwt, passport-google-oauth20, bcryptjs |
+| Banco de Dados   | PostgreSQL, Prisma ORM 6.x                                             |
+| Jobs/Scheduling  | @nestjs/schedule                                                       |
+| Validação/Config | class-validator, class-transformer, dotenv                             |
+| Dev/Test         | Jest, Supertest, ESLint, Prettier                                      |
+| Container        | Docker, Docker Compose                                                 |
+
+---
+
+## 🏗️ Estrutura do Projeto
+
+Arquitetura modular com camadas Application/Domain/Infrastructure (ports & adapters).
+
+```
+src/
+  application/
+    dto/
+      commum/EnvVarsSchema.ts
+      user/ (Login/Register DTOs)
+    service/
+      AuthService.ts
+      RefreshTokenService.ts
+      OAuthAccountService.ts
+      PrismaService.ts
+  domain/
+    port/ (UserRepository, RefreshTokenRepository, OAuthAccountRepository)
+  infrastructure/
+    config/
+      job/CleanupRefreshTokensJob.ts
+      security/JwtStrategy.ts
+      security/GoogleStrategy.ts
+    controller/AuthController.ts
+    modules/ (AuthModule, PrismaModule, OAuthAccountModule, RefreshTokenModule)
+    persistence/ (Prisma*Repository.ts)
+  app.module.ts
+  main.ts
+prisma/
+  schema.prisma
+  migrations/
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ npm run start
+## 🚀 Instalação
 
-# watch mode
-$ npm run start:dev
+### Pré-requisitos
 
-# production mode
-$ npm run start:prod
+- Node.js 18+ (recomendado)
+- Docker e Docker Compose (para o Postgres)
+- NPM
+
+### Passo a Passo
+
+1. Clone o repositório
+
+```
+git clone https://github.com/Pablobrek-bit/autentication.git
+cd autentication
 ```
 
-## Run tests
+2. Configure as variáveis de ambiente
 
-```bash
-# unit tests
-$ npm run test
+- Copie `.env.example` para `.env` e preencha os valores (veja [Variáveis de Ambiente](#-variáveis-de-ambiente)).
 
-# e2e tests
-$ npm run test:e2e
+3. Suba o banco de dados (Docker)
 
-# test coverage
-$ npm run test:cov
+```
+docker-compose up -d autentication_db
 ```
 
-## Deployment
+4. Instale as dependências
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g mau
-$ mau deploy
+```
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+5. Execute as migrações do Prisma e gere o client
 
-## Resources
+```
+npx prisma migrate dev
+npx prisma generate
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+6. Inicie o servidor NestJS (dev)
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```
+npm run start:dev
+```
 
-## Support
+7. Acesse a API
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- Local: http://localhost:3000
+- Via Docker (se executar o app no compose): porta mapeada `3001:3000` → http://localhost:3001
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## 📜 Comandos Disponíveis
 
-## License
+| Comando                  | Descrição                                 |
+| ------------------------ | ----------------------------------------- |
+| `npm run build`          | Compila TypeScript para `dist`            |
+| `npm run format`         | Formata com Prettier                      |
+| `npm start`              | Inicia em modo produção (requer build)    |
+| `npm run start:dev`      | Inicia em desenvolvimento com watch       |
+| `npm run start:debug`    | Inicia com debug + watch                  |
+| `npm run start:prod`     | Inicia a partir de `dist`                 |
+| `npm run lint`           | ESLint com correção automática            |
+| `npm test`               | Testes unitários                          |
+| `npm run test:e2e`       | Testes end-to-end                         |
+| `npx prisma migrate dev` | Cria/aplica migrações no banco            |
+| `npx prisma studio`      | UI do Prisma para visualizar/editar dados |
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+---
+
+## 🔧 Variáveis de Ambiente
+
+Crie `.env` na raiz (baseado em `.env.example`):
+
+```properties
+# Ambiente
+NODE_ENV=dev
+PORT=3000
+
+# Banco de Dados
+DB_USER=your_user
+DB_PASSWORD=your_password
+DB_NAME=your_db_name
+# URL do Postgres usada pelo Prisma (schema.prisma usa DB_URL)
+DB_URL=postgresql://your_user:your_password@localhost:5432/your_db_name
+
+# JWT
+JWT_ACCESS_SECRET=your_access_secret
+JWT_REFRESH_SECRET=your_refresh_secret
+JWT_ACCESS_TTL=900          # 15 min (segundos)
+JWT_REFRESH_TTL=2592000     # 30 dias (segundos)
+
+# OAuth (Google)
+OAUTH_GOOGLE_CLIENT_ID=your_google_client_id
+OAUTH_GOOGLE_CLIENT_SECRET=your_google_client_secret
+OAUTH_GOOGLE_CALLBACK_URL=http://localhost:3000/auth/oauth/google/callback
+```
+
+Observações:
+
+- Access token curto (JWT_ACCESS_TTL) + refresh longo (JWT_REFRESH_TTL).
+- Refresh token é salvo como hash (SHA-256) em `RefreshToken.token_hash` (único).
+
+---
+
+## 🌐 Deployment
+
+1. Atualize as variáveis de ambiente para produção (`NODE_ENV=prod`).
+2. Build da aplicação:
+
+```
+npm run build
+```
+
+3. Migrações em produção:
+
+```
+npx prisma migrate deploy
+```
+
+4. Start em produção:
+
+```
+npm run start:prod
+```
+
+Opcional: use Docker para conteinerizar o app (veja `Dockerfile` e `docker-compose.yml`).
+
+---
+
+## 🔍 Troubleshooting
+
+1. “Unknown authentication strategy 'jwt'”
+
+- Garanta `JwtStrategy` como provider e `PassportModule.register({ defaultStrategy: 'jwt' })` no `AuthModule`.
+
+2. “an unknown value was passed to the validate function” (400)
+
+- Envie `Content-Type: application/json` e body JSON válido. Evite `import type` do DTO no controller.
+
+3. OAuth Google retorna 401 ao iniciar
+
+- Verifique `OAUTH_GOOGLE_*` no `.env` e a Redirect URI na Google Cloud (igual ao callback). Use `state: false` na strategy se não usar sessões.
+
+4. Erros de banco (conexão/migração)
+
+- Confirme `DB_URL` e se o container Postgres está saudável (`docker ps`, `docker logs`).
+
+5. Injeção do repositório (UnknownDependencies)
+
+- Use o mesmo token de provider/`@Inject` para o `UserRepository` ou as portas de repositório usadas.
+
+6. Refresh/Logout
+
+- Refresh sem rotação: `/auth/refresh` só emite novo access. Logout revoga o refresh; após expirar o access, será preciso logar novamente.
+
+---
+
+## 🤝 Contribuição
+
+1. Fork
+2. `git checkout -b feature/sua-feature`
+3. Commit (`npm run lint` antes de enviar)
+4. Push e abra um PR

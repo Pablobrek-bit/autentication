@@ -115,6 +115,10 @@ export class AuthService {
     if (params.email) {
       const userByEmail = await this.repository.findByEmail(params.email);
       if (userByEmail) {
+        await this.repository.update(userByEmail.id, {
+          fullName: params.fullName,
+          emailVerified: true,
+        });
         await this.oAuthAccountService.linkWithOAuth(
           userByEmail.id,
           params.provider,
@@ -123,6 +127,7 @@ export class AuthService {
           params.accessToken,
           params.refreshToken,
         );
+
         return { id: userByEmail.id, email: userByEmail.email ?? null };
       }
     }

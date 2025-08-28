@@ -13,4 +13,12 @@ export abstract class UserRepository {
     fullName: string | null;
     emailVerified?: boolean;
   }): Promise<{ id: string; email: string | null }>;
+
+  abstract update(
+    userId: string,
+    params: {
+      fullName?: string | null;
+      emailVerified?: boolean;
+    },
+  ): Promise<void>;
 }

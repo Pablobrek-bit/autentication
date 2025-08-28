@@ -49,4 +49,21 @@ export class PrismaUserRepository implements UserRepository {
     });
     return created;
   }
+
+  async update(
+    userId: string,
+    params: {
+      email?: string | null;
+      fullName?: string | null;
+      emailVerified?: boolean;
+    },
+  ): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        full_name: params.fullName,
+        email_verified: params.emailVerified,
+      },
+    });
+  }
 }

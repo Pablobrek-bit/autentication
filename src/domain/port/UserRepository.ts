@@ -8,25 +8,9 @@ export abstract class UserRepository {
 
   abstract findByEmail(email: string): Promise<User | null>;
 
-  abstract findUserByOAuth(
-    provider: string,
-    providerUserId: string,
-  ): Promise<{ id: string; email: string | null } | null>;
-
   abstract createUserFromOAuth(params: {
     email: string | null;
     fullName: string | null;
     emailVerified?: boolean;
   }): Promise<{ id: string; email: string | null }>;
-
-  abstract linkOAuthAccount(
-    userId: string,
-    account: {
-      provider: string;
-      providerUserId: string;
-      providerEmail?: string;
-      accessToken?: string;
-      refreshToken?: string;
-    },
-  ): Promise<void>;
 }

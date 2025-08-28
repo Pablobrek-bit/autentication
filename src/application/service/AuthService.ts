@@ -133,13 +133,14 @@ export class AuthService {
       fullName: params.fullName,
       emailVerified: true,
     });
-    await this.repository.linkOAuthAccount(createdUser.id, {
-      provider: params.provider,
-      providerUserId: params.providerUserId,
-      providerEmail: params.email ?? undefined,
-      accessToken: params.accessToken,
-      refreshToken: params.refreshToken,
-    });
+    await this.oAuthAccountService.linkWithOAuth(
+      createdUser.id,
+      params.provider,
+      params.providerUserId,
+      params.email ?? undefined,
+      params.accessToken,
+      params.refreshToken,
+    );
     return { id: createdUser.id, email: createdUser.email };
   }
 

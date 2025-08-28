@@ -53,14 +53,10 @@ export class AuthController {
     return tokens;
   }
 
-  // User (protegidas)
-
-  // GET /users/me — retorna dados do usuário autenticado (protected by JWT).
+  // GET /auth/me — retorna dados do usuário autenticado (protected by JWT).
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
   async getProfile(@Req() req) {
     return req.user;
   }
-
-  // GET /users/:id / outros endpoints de usuário conforme necessidade (RBAC/guards).
 }
